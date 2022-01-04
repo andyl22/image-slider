@@ -38,23 +38,24 @@ const image = css`
 `
 
 export default function ImageSlider(props) {
-  const handleExpand = (e) => {
-    //passes the setModalImage to the modal, so it can be used to close the modal
-    setModalImage(<ImageModal src={e.target.src} alt={e.target.alt} handleClose={setModalImage}/>);
-  };
 
-  const handleBack = () => {
+  const handleBack = (e) => {
     if(slideNumber<=0) return;
     setSlideNumber(slideNumber-1);
   };
   
-  const handleForward = () => {
+  const handleForward = (e) => {
     if(imgArray.length-3<=slideNumber) return;
     setSlideNumber(slideNumber+1);
   };
 
+  // Mouseclick state and handler are used to prevent click focuses from executing handleFocus.
+  const handleMouseClick = (e) => {
+    setMouseDown(!mouseDown);
+  }
+
   const handleFocus = (e) => {
-    console.log(slideNumber)
+    if(mouseDown) return;
     if(e.target.tabIndex===slideNumber+3) {
       handleForward();
     }
@@ -63,13 +64,33 @@ export default function ImageSlider(props) {
     }
   }
 
+  const handleExpand = (e) => {
+    //passes the setModalImage to the modal, so it can be used to close the modal
+    setModalImage(<ImageModal src={e.target.src} alt={e.target.alt} handleClose={setModalImage}/>);
+  };
+
   const handleKeyPress = (e) => { 
     if(e.charCode === 13) handleExpand(e)
   }
 
   const {imgArray} = props; 
   const [modalImage, setModalImage] = useState(null);
-  const mappedArray = imgArray.map((img, i) => <img css={image} key={img.src} src={img.src} alt={img.alt} draggable={false} onClick={handleExpand} tabIndex={i+1} onFocus={handleFocus} onKeyPress={handleKeyPress}/>);
+  const [mouseDown, setMouseDown] = useState(false);
+  const mappedArray = imgArray.map((img, i) => 
+    <img 
+      css={image} 
+      key={img.src} 
+      src={img.src} 
+      alt={img.alt} 
+      draggable={false} 
+      onClick={handleExpand} 
+      tabIndex={i+1} 
+      onFocusCapture={handleFocus} 
+      onKeyPress={handleKeyPress} 
+      onMouseDown={handleMouseClick} 
+      onMouseUp={handleMouseClick}
+    />
+  );
   const [slideNumber, setSlideNumber] = useState(0);
   const slicedArray = [...mappedArray.slice(slideNumber, slideNumber+3)];
 
